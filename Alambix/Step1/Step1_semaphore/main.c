@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <mqueue.h>
 #include <semaphore.h>
+#include <signal.h>
 #include "errno.h"
 
 #define ALAMBIX_BARTENDER_MQ_NAME "/alambix_bartender_mq"
@@ -42,6 +43,12 @@ sem_t sem;
 
 mqd_t mq;
 struct mq_attr mq_bartender_attr;
+
+void signal_sigchld_handler(int signal)
+{
+    fprintf(stdout, "SIGCHLD intercepté (PID %d)\n", getpid());
+    wait(NULL);
+}
 
 void alambix_init()
 {
@@ -106,6 +113,16 @@ void alambix_start(){
 void alambix_help()
 {
     // TODO: Insert here the code to launch the Alambix help documentation in a browser.
+
+    // Intercept signals to avoid zombies process
+    struct sigaction action;
+    action.sa_handler = signal_sigchld_handler;
+    sigemptyset(&(action.sa_mask));
+    action.sa_flags = SA_RESTART | SA_NOCLDSTOP; // SA_NOCLDSTOP : seulement quand un fils se termine (pas quand il est juste arrêté)
+
+    sigaction(SIGCHLD, &action, NULL);
+
+    // Launch help process
     char* path = alambix_help_html();
 
     pid_t pid_fils;
