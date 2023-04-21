@@ -5,7 +5,6 @@
 #include <time.h>
 #include <signal.h>
 
-
 void notify_function(union sigval val)
 {
 	char * message = (char *)(val.sival_ptr);
@@ -57,4 +56,3 @@ int main(void)
 	fprintf(stdout, "main quitte\n");
 	return 0;
 }
-
